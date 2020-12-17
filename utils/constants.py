@@ -27,3 +27,8 @@ image_height = 800
 camera_fps = 30
 camera_save_files_path = '/home/kostas/Autonomous_car/files/'
 image_quality = 90  # from 0 to 100
+
+# LEDs Constants
+green_LED_pin = 6
+red_LED_pin = 4
+blue_LED_pin = 9

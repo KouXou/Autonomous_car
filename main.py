@@ -4,6 +4,7 @@ from car.car import Car
 from mqtt_connection.mqtt_car import MqttCar
 from distance_sensor.distance_sensor import DistanceSensor
 from camera.car_camera import CarCamera
+from led.single_led import SingleLED
 import utils.constants as const
 import sys
 import termios
@@ -38,16 +39,17 @@ def readKey(getchar_fn=None):
 
 GPIO.setmode(GPIO.BCM)
 mqtt = MqttCar()
+
 car_camera = None
 try:
 
     mqtt.start()
+    led = SingleLED(GPIO)
+    led.onStartCarLEDs()
 
     car = Car(GPIO)
 
     distance_sensor = DistanceSensor(GPIO)
-
-
 
     while True:
         keyp = readKey()
@@ -78,7 +80,7 @@ try:
         elif keyp == '3':
             car.high_speed()
         elif keyp == 'o':
-            car_camera = CarCamera()
+            car_camera = CarCamera(led)
             car_camera.start()
         elif keyp == 'p':
             car_camera.stop()
@@ -88,7 +90,7 @@ try:
             break
 
         if car_camera is not None:
-            car_camera.pass_csv_param(car.direction, car.move, car.speed)
+            car_camera.pass_csv_param(car.direction, car.move, car.speed, distance_sensor.distance)
         mqtt.publish(car.move, 'test/topic1')
 except KeyboardInterrupt:
     print('turn off')

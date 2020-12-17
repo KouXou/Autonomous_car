@@ -6,10 +6,11 @@ import os
 from threading import Thread
 from data.car_data import CarData, CsvFile
 import pandas as pd
+from led.single_led import SingleLED
 
 
 class CarCamera(Thread):
-    def __init__(self):
+    def __init__(self, led):
         self.camera_flip = const.camera_flip
         self.image_width = const.image_width
         self.image_height = const.image_height
@@ -21,6 +22,8 @@ class CarCamera(Thread):
         self.car_speed = ''
         self.created_dir = ''
         self.start_rec = ''
+        self.distance = ''
+        self.led = led
         self.df = pd.DataFrame()
         self.camera = nanocamera.Camera(flip=self.camera_flip, width=self.image_width, height=self.image_height,
                                         fps=self.camera_fps)
@@ -36,9 +39,11 @@ class CarCamera(Thread):
         self.df = carData.create_df()
         # print(created_dir)
         while self.camera.isReady():
+            # Turn On Red LED
+            self.led.turnOn(const.red_LED_pin)
             # read the camera image
             image = self.camera.read()
-            self.df = carData.addToDataFrame(self.df, self.car_direction, self.car_move, self.car_speed)
+            self.df = carData.addToDataFrame(self.df, self.car_direction, self.car_move, self.car_speed, self.distance)
             cv2.imwrite(self.camera_save_files_path + self.created_dir + '/img' + str(counter) + '.jpg', image,
                         [int(cv2.IMWRITE_JPEG_QUALITY), self.image_quality])
             counter += 1
@@ -51,6 +56,9 @@ class CarCamera(Thread):
         return created_dir, start_rec
 
     def stop(self):
+        # Turn Off Red LED
+        self.led.turnOff(const.red_LED_pin)
+        # Release Camera
         self.camera.release()
         csv = CsvFile(csv_name=self.start_rec + '.csv')
         csv.export_file(self.df, self.camera_save_files_path + self.created_dir + '/')
@@ -59,8 +67,9 @@ class CarCamera(Thread):
     def run(self):
         self.start_recording()
 
-    def pass_csv_param(self, car_direction, car_move, car_speed):
+    def pass_csv_param(self, car_direction, car_move, car_speed, distance):
         self.car_direction = car_direction
         self.car_move = car_move
         self.car_speed = car_speed
+        self.distance = distance
 
