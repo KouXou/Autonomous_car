@@ -6,17 +6,17 @@ import os
 from threading import Thread
 from data.car_data import CarData, CsvFile
 import pandas as pd
-from led.single_led import SingleLED
 
 
 class CarCamera(Thread):
-    def __init__(self, led):
+    def __init__(self, led, autopilot=False):
         self.camera_flip = const.camera_flip
         self.image_width = const.image_width
         self.image_height = const.image_height
         self.camera_fps = const.camera_fps
         self.camera_save_files_path = const.camera_save_files_path
         self.image_quality = const.image_quality
+        self.autopilot = autopilot
         self.car_direction = ''
         self.car_move = ''
         self.car_speed = ''
@@ -44,16 +44,20 @@ class CarCamera(Thread):
             # read the camera image
             image = self.camera.read()
             self.df = carData.addToDataFrame(self.df, self.car_direction, self.car_move, self.car_speed, self.distance)
-            cv2.imwrite(self.camera_save_files_path + self.created_dir + '/img' + str(counter) + '.jpg', image,
-                        [int(cv2.IMWRITE_JPEG_QUALITY), self.image_quality])
+            cv2.imwrite(self.camera_save_files_path + self.created_dir + self.generate_image_name(counter, self.car_move, self.car_speed),
+                        image, [int(cv2.IMWRITE_JPEG_QUALITY), self.image_quality])
             counter += 1
 
     def create_dir(self):
         start_rec = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
         created_dir = start_rec
-        if not os.path.exists(const.camera_save_files_path + created_dir):
+        if not os.path.exists(const.camera_save_files_path + const.track_name + '/' + created_dir):
             os.makedirs(const.camera_save_files_path + created_dir)
         return created_dir, start_rec
+
+    def generate_image_name(self, counter, car_move, car_speed):
+        name = '/img_' + str(counter) + '_' + car_move + '_' + str(car_speed) + '.jpg'
+        return name
 
     def stop(self):
         # Turn Off Red LED
@@ -65,7 +69,10 @@ class CarCamera(Thread):
         self.df = pd.DataFrame()
 
     def run(self):
-        self.start_recording()
+        if self.autopilot:
+            print('Autopilot Camera On')
+        else:
+            self.start_recording()
 
     def pass_csv_param(self, car_direction, car_move, car_speed, distance):
         self.car_direction = car_direction

@@ -50,35 +50,46 @@ try:
     car = Car(GPIO)
 
     distance_sensor = DistanceSensor(GPIO)
-
+    mqtt.publish(car.speed, 'car/speed/value')
+    mqtt.publish(car.move, 'car/move')
     while True:
         keyp = readKey()
-        print(keyp)
-
+        # print(keyp)
         if keyp == 0:
             car.forward()
+            mqtt.publish(car.move, 'car/move')
         elif keyp == 1:
             car.backward()
+            mqtt.publish(car.move, 'car/move')
         elif keyp == 2:
             if car.direction == const.FWD:
                 car.forwardRight()
-            elif car.direction == const.FWD:
+                mqtt.publish(car.move, 'car/move')
+            elif car.direction == const.BWD:
                 car.backwardRight()
+                mqtt.publish(car.move, 'car/move')
         elif keyp == 3:
             if car.direction == const.FWD:
                 car.forwardLeft()
-            elif car.direction == const.FWD:
+                mqtt.publish(car.move, 'car/move')
+            elif car.direction == const.BWD:
                 car.backwardLeft()
+                mqtt.publish(car.move, 'car/move')
         elif keyp == ' ':
             car.stop()
+            mqtt.publish(car.move, 'car/move')
         elif keyp == '0':
             car.stop()
+            mqtt.publish(car.move, 'car/move')
         elif keyp == '1':
             car.low_speed()
+            mqtt.publish(car.speed, 'car/speed/value')
         elif keyp == '2':
             car.medium_speed()
+            mqtt.publish(car.speed, 'car/speed/value')
         elif keyp == '3':
             car.high_speed()
+            mqtt.publish(car.speed, 'car/speed/value')
         elif keyp == 'o':
             car_camera = CarCamera(led)
             car_camera.start()
@@ -88,10 +99,8 @@ try:
             car_camera = None
         elif ord(keyp) == 3:
             break
-
         if car_camera is not None:
             car_camera.pass_csv_param(car.direction, car.move, car.speed, distance_sensor.distance)
-        mqtt.publish(car.move, 'test/topic1')
 except KeyboardInterrupt:
     print('turn off')
     GPIO.cleanup()

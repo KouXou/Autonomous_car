@@ -3,7 +3,7 @@ import utils.constants as const
 
 class Car:
 
-    def __init__(self, gpio, direction='forward', speed=50, move='forward'):
+    def __init__(self, gpio, speed, direction='forward', move='stop'):
         self.direction = direction
         self.move = move
 
@@ -35,23 +35,29 @@ class Car:
         self.pw2.ChangeDutyCycle(self.speed)
         # print(self.speed)
 
+    def set_speed_left(self, speed_left=20):
+        self.pw2.ChangeDutyCycle(speed_left)
+
+    def set_speed_right(self, speed_right=20):
+        self.pw1.ChangeDutyCycle(speed_right)
+
     def backward(self):
         self.go(True, False, True, False, const.BWD, 'backward')
 
     def backwardLeft(self):
-        self.go(False, False, True, False, const.BWD, 'backward left')
+        self.go(False, False, True, False, const.BWD, 'backward_left')
 
     def backwardRight(self):
-        self.go(True, False, False, False, const.BWD, 'backward right')
+        self.go(True, False, False, False, const.BWD, 'backward_right')
 
     def forward(self):
         self.go(False, True, False, True, const.FWD, 'forward')
 
     def forwardLeft(self):
-        self.go(False, True, False, False, const.FWD, 'forward left')
+        self.go(False, True, False, False, const.FWD, 'forward_left')
 
     def forwardRight(self):
-        self.go(False, False, False, True, const.FWD, 'forward right')
+        self.go(False, False, False, True, const.FWD, 'forward_right')
 
     def stop(self):
         self.go(False, False, False, False, const.STOP, 'stop')
