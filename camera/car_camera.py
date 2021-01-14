@@ -6,10 +6,11 @@ import os
 from threading import Thread
 from data.car_data import CarData, CsvFile
 import pandas as pd
+import time
 
 
 class CarCamera(Thread):
-    def __init__(self, led, autopilot=False):
+    def __init__(self, led, autopilot=False, record_stops=False):
         self.camera_flip = const.camera_flip
         self.image_width = const.image_width
         self.image_height = const.image_height
@@ -17,12 +18,15 @@ class CarCamera(Thread):
         self.camera_save_files_path = const.camera_save_files_path
         self.image_quality = const.image_quality
         self.autopilot = autopilot
+        self.record_stops = record_stops
         self.car_direction = ''
         self.car_move = ''
         self.car_speed = ''
         self.created_dir = ''
         self.start_rec = ''
         self.distance = ''
+        self.image = ''
+        self.carData = ''
         self.led = led
         self.df = pd.DataFrame()
         self.camera = nanocamera.Camera(flip=self.camera_flip, width=self.image_width, height=self.image_height,
@@ -44,8 +48,10 @@ class CarCamera(Thread):
             # read the camera image
             image = self.camera.read()
             self.df = carData.addToDataFrame(self.df, self.car_direction, self.car_move, self.car_speed, self.distance)
-            cv2.imwrite(self.camera_save_files_path + self.created_dir + self.generate_image_name(counter, self.car_move, self.car_speed),
-                        image, [int(cv2.IMWRITE_JPEG_QUALITY), self.image_quality])
+            cv2.imwrite(
+                self.camera_save_files_path + self.created_dir + self.generate_image_name(counter, self.car_move,
+                                                                                          self.car_speed),
+                image, [int(cv2.IMWRITE_JPEG_QUALITY), self.image_quality])
             counter += 1
 
     def create_dir(self):
@@ -68,9 +74,36 @@ class CarCamera(Thread):
         csv.export_file(self.df, self.camera_save_files_path + self.created_dir + '/')
         self.df = pd.DataFrame()
 
+    def start_camera(self):
+        self.created_dir, self.start_rec = self.create_dir()
+        # counter = 0
+        self.carData = CarData()
+        self.df = self.carData.create_df()
+        # print(created_dir)
+        while self.camera.isReady():
+            # read the camera image
+            self.image = self.camera.read()
+
+    def take_pic(self):
+        # Turn On green LED
+        self.led.turnOn(const.green_LED_pin)
+        time.sleep(0.5)
+        self.led.turnOff(const.green_LED_pin)
+
+        self.df = self.carData.addToDataFrame(self.df, 'stop', 'stop', 0, self.distance)
+
+        cv2.imwrite(
+            self.camera_save_files_path + self.created_dir + self.generate_image_name(len(self.df) - 1, self.car_move,
+                                                                                      self.car_speed),
+            self.image, [int(cv2.IMWRITE_JPEG_QUALITY), self.image_quality])
+
     def run(self):
+        print(self.record_stops)
         if self.autopilot:
             print('Autopilot Camera On')
+        elif self.record_stops:
+            print('Record Stops On')
+            self.start_camera()
         else:
             self.start_recording()
 
@@ -79,4 +112,3 @@ class CarCamera(Thread):
         self.car_move = car_move
         self.car_speed = car_speed
         self.distance = distance
-

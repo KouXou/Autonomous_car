@@ -41,58 +41,23 @@ GPIO.setmode(GPIO.BCM)
 mqtt = MqttCar()
 
 car_camera = None
+
+mqtt.start()
+led = SingleLED(GPIO)
+led.onStartCarLEDs()
 try:
-
-    mqtt.start()
-    led = SingleLED(GPIO)
-    led.onStartCarLEDs()
-
     car = Car(GPIO, 65)
 
     distance_sensor = DistanceSensor(GPIO)
-    mqtt.publish(car.speed, 'car/speed/value')
-    mqtt.publish(car.move, 'car/move')
+    car_camera = CarCamera(led, autopilot=False, record_stops=True)
+
+    car_camera.start()
+
     while True:
         keyp = readKey()
-        # print(keyp)
-        if keyp == 0:
-            car.forward()
-            mqtt.publish(car.move, 'car/move')
-        elif keyp == 1:
-            car.backward()
-            mqtt.publish(car.move, 'car/move')
-        elif keyp == 2:
-            if car.direction == const.FWD:
-                car.forwardRight()
-                mqtt.publish(car.move, 'car/move')
-            elif car.direction == const.BWD:
-                car.backwardRight()
-                mqtt.publish(car.move, 'car/move')
-        elif keyp == 3:
-            if car.direction == const.FWD:
-                car.forwardLeft()
-                mqtt.publish(car.move, 'car/move')
-            elif car.direction == const.BWD:
-                car.backwardLeft()
-                mqtt.publish(car.move, 'car/move')
-        elif keyp == ' ':
-            car.stop()
-            mqtt.publish(car.move, 'car/move')
-        elif keyp == '0':
-            car.stop()
-            mqtt.publish(car.move, 'car/move')
-        elif keyp == '1':
-            car.low_speed()
-            mqtt.publish(car.speed, 'car/speed/value')
-        elif keyp == '2':
-            car.medium_speed()
-            mqtt.publish(car.speed, 'car/speed/value')
-        elif keyp == '3':
-            car.high_speed()
-            mqtt.publish(car.speed, 'car/speed/value')
-        elif keyp == 'o':
-            car_camera = CarCamera(led, autopilot=False, record_stops=False)
-            car_camera.start()
+
+        if keyp == ' ':
+            car_camera.take_pic()
         elif keyp == 'p':
             car_camera.stop()
             car_camera.join()
@@ -110,6 +75,7 @@ except KeyboardInterrupt:
     except SystemExit:
         os._exit(0)
 finally:
+    led.turnOff(const.green_LED_pin)
     if car_camera is not None:
         car_camera.stop()
         car_camera.join()
