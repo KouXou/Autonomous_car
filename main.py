@@ -102,7 +102,10 @@ try:
         elif ord(key_press) == 3:
             break
         if car_camera is not None:
-            car_camera.pass_csv_param(car.direction, car.move, car.speed, distance_sensor.distance)
+            car_camera.pass_csv_param(input_command=0,
+                                      car_move=car.move,
+                                      car_speed=car.speed,
+                                      distance=distance_sensor.distance)
 except KeyboardInterrupt:
     print('turn off')
     GPIO.cleanup()
