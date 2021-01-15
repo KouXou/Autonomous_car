@@ -1,68 +1,55 @@
-# This is a sample Python script.
 import Jetson.GPIO as GPIO
 from car.car import Car
+from directory_manager.dir_manager import DirectoryManager
 from mqtt_connection.mqtt_car import MqttCar
 from distance_sensor.distance_sensor import DistanceSensor
 from camera.car_camera import CarCamera
 from led.single_led import SingleLED
 import utils.constants as const
 import sys
-import termios
-import tty
 import os
-
-
-def readChar():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    if ch == '0x03':
-        raise KeyboardInterrupt
-    return ch
-
-
-def readKey(getchar_fn=None):
-    getchar = getchar_fn or readChar
-    c1 = getchar()
-    if ord(c1) != 0x1b:
-        return c1
-    c2 = getchar()
-    if ord(c2) != 0x5b:
-        return c1
-    c3 = getchar()
-    return ord(c3) - 65  # 0=Up, 1=Down, 2=Right, 3=Left arrows
-
+import time
+from utils.keyboard_reader import KeyboardReader
 
 GPIO.setmode(GPIO.BCM)
+# Create MQTT class
 mqtt = MqttCar()
-
-car_camera = None
-
-mqtt.start()
+# Create directory manager class
+dir_manager = DirectoryManager()
+# Crete keyboard reader class
+keyboard_reader = KeyboardReader()
+# Create car camera class
+car_camera = CarCamera(autopilot=False, record_stops=True)
+# Create distance sensor class
+distance_sensor = DistanceSensor(GPIO)
+# Create car class
+car = Car(GPIO, 65)
+# Create LED class
 led = SingleLED(GPIO)
-led.onStartCarLEDs()
+
+# Set initial values
+created_dir, start_rec = dir_manager.create_directory()
 try:
-    car = Car(GPIO, 65)
 
-    distance_sensor = DistanceSensor(GPIO)
-    car_camera = CarCamera(led, autopilot=False, record_stops=True)
-
+    mqtt.start()
+    led.onStartCarLEDs()
     car_camera.start()
 
     while True:
-        keyp = readKey()
+        key_pressed = keyboard_reader.readKey()
 
-        if keyp == ' ':
-            car_camera.take_pic()
-        elif keyp == 'p':
-            car_camera.stop()
+        if key_pressed == ' ':
+            # Turn On green LED
+            led.turnOn(const.green_LED_pin)
+            time.sleep(0.5)
+            led.turnOff(const.green_LED_pin)
+            # Take photo
+            car_camera.take_pic(created_dir=created_dir, start_rec=start_rec)
+        elif key_pressed == 'p':
+            car_camera.stop_photo_camera()
             car_camera.join()
             car_camera = None
-        elif ord(keyp) == 3:
+        elif ord(key_pressed) == 3:
             break
         if car_camera is not None:
             car_camera.pass_csv_param(car.direction, car.move, car.speed, distance_sensor.distance)

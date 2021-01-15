@@ -53,7 +53,7 @@ try:
     # loaded_model = load_pretrained_weights(loaded_model)
     loaded_model = load_trt_model()
 
-    preprocessor = ImagePreProcessor(224, 224)
+    preprocessor = ImagePreProcessor(336, 224)
 
     mqtt.start()
     led = SingleLED(GPIO)
@@ -61,7 +61,7 @@ try:
 
     car = Car(GPIO, speed=55)
 
-    car_camera = CarCamera(led, autopilot=True, record_stops=False)
+    car_camera = CarCamera(autopilot=True, record_stops=False)
     car_camera.start()
 
     # input = jetson.utils.videoSource('csi://0')

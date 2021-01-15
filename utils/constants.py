@@ -22,9 +22,9 @@ echo_pin = 20
 
 # Camera Constants
 camera_flip = 2
-image_width =  224 #640 # 1280
+image_width =  336 #640 # 1280
 image_height =  224 #480 #800
-camera_fps = 30  # 30
+camera_fps = 15  # 30
 camera_save_files_path = '/home/kostas/Autonomous_car/files/'
 image_quality = 90  # from 0 to 100
 
