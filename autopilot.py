@@ -10,28 +10,12 @@ import os
 import utils.constants as const
 from utils.preprocessor import ImagePreProcessor
 from torch2trt import TRTModule
-import jetson.utils
 
 class_names = ['forward', 'stop', 'forward_left', 'forward_right']
 FILES_PATH = '/home/kostas/Autonomous_car/files/'
 # model_name = 'track5_2_model_rsnet_40ep'
 # model_name = 'track5+6+8_2_model_mirror'
 model_name = 'track9+10+11+12+13_3_model_state'
-# track5_1_model_mirror_trt.pt
-# def create_model(device):
-#     print('Start model creation')
-#     loaded_model = models.resnet18(pretrained=True)
-#     loaded_model.fc = torch.nn.Linear(512, len(class_names))
-#
-#     loaded_model = loaded_model.to(device)
-#     return loaded_model
-#
-#
-# def load_pretrained_weights(loaded_model):
-#     print('Load pretrained model')
-#     loaded_model.load_state_dict(torch.load(FILES_PATH + 'track2_3_model.pt'))
-#     loaded_model = loaded_model.eval().half()
-#     return loaded_model
 
 
 def load_trt_model():
@@ -49,8 +33,6 @@ device = (torch.device('cuda') if torch.cuda.is_available() else torch.device('c
 print(f"Training on device {device}.")
 car_camera = None
 try:
-    # loaded_model = create_model(device)
-    # loaded_model = load_pretrained_weights(loaded_model)
     loaded_model = load_trt_model()
 
     preprocessor = ImagePreProcessor(224, 224)
@@ -64,15 +46,12 @@ try:
     car_camera = CarCamera(autopilot=True, record_stops=False)
     car_camera.start()
 
-    # input = jetson.utils.videoSource('csi://0')
-    # output = jetson.utils.videoOutput('rtp://192.168.1.101:1234')
-
     mqtt.publish(car.move, 'car/move')
     mqtt.publish(car.speed, 'car/speed/value')
     mqtt.publish('Autopilot Mode', 'car/mode')
     while True:
 
-        image = car_camera.read()
+        image, width, height = car_camera.read()
 
         if mqtt.speed_value is not None:
             car.set_speed(mqtt.speed_value)
@@ -116,7 +95,7 @@ except KeyboardInterrupt:
 
     GPIO.cleanup()
     if car_camera is not None:
-        car_camera.camera.release()
+        car_camera.stop()
         car_camera.join()
     try:
         mqtt.disconnect()
@@ -126,6 +105,6 @@ except KeyboardInterrupt:
 finally:
 
     if car_camera is not None:
-        car_camera.camera.release()
+        car_camera.stop()
         car_camera.join()
     GPIO.cleanup()

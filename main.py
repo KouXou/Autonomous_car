@@ -26,7 +26,7 @@ car = Car(GPIO, 45)
 # Create Distance sensor class
 distance_sensor = DistanceSensor(GPIO)
 # Create car camera class
-car_camera = CarCamera(autopilot=False, record_stops=False)
+car_camera = CarCamera(autopilot=False, record_stops=False, video_output=True)
 
 # Set initial values
 created_dir = ''
@@ -109,6 +109,9 @@ try:
 except KeyboardInterrupt:
     print('turn off')
     GPIO.cleanup()
+    if car_camera is not None:
+        car_camera.stop()
+        car_camera.join()
     try:
         mqtt.disconnect()
         sys.exit(0)

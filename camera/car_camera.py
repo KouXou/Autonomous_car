@@ -1,9 +1,11 @@
 import cv2
-import nanocamera
 import utils.constants as const
 from threading import Thread
 from data.car_data import CarData, CsvFile
 import pandas as pd
+import jetson.utils
+import sys
+import numpy as np
 
 
 def generate_image_name(counter, car_move, car_speed):
@@ -12,7 +14,7 @@ def generate_image_name(counter, car_move, car_speed):
 
 
 class CarCamera(Thread):
-    def __init__(self, autopilot=False, record_stops=False):
+    def __init__(self, autopilot=False, record_stops=False, video_output=False):
         self.camera_save_files_path = const.camera_save_files_path
         self.autopilot = autopilot
         self.record_stops = record_stops
@@ -25,9 +27,12 @@ class CarCamera(Thread):
         self.df = pd.DataFrame()
         self.rec = False
         self.take_photo = False
+        self.video_output = video_output
         self.counter = 0
-        self.camera = nanocamera.Camera(flip=const.camera_flip, width=const.image_width, height=const.image_height,
-                                        fps=const.camera_fps)
+        self.font = jetson.utils.cudaFont()
+        self.camera = jetson.utils.gstCamera(1280, 720)
+        self.output = jetson.utils.videoOutput("rtp://192.168.1.101:1234", argv=sys.argv)
+
         Thread.__init__(self)
         self.daemon = True
 
@@ -35,9 +40,13 @@ class CarCamera(Thread):
         carData = CarData()
         self.df = carData.create_df()
 
-        while self.camera.isReady():
-            # read the camera image
-            image = self.camera.read()
+        while True:
+            image, width, height = self.camera.CaptureRGBA(zeroCopy=1)
+            # self.font.OverlayText(image, width, height, "YOLO", 10, 10, self.font.White,
+            #                  self.font.Gray40)
+            if self.video_output:
+                self.output.Render(image)
+
             if self.rec:
                 self.save_photo(image=image, carData=carData)
                 self.counter += 1
@@ -62,9 +71,9 @@ class CarCamera(Thread):
         carData = CarData()
         self.df = carData.create_df()
 
-        while self.camera.isReady():
+        while True:
             # read the camera image
-            image = self.camera.read()
+            image = self.camera.CaptureRGBA(zeroCopy=1)
             if self.take_photo:
                 self.save_photo(image=image, carData=carData)
                 self.take_photo = False
@@ -84,7 +93,13 @@ class CarCamera(Thread):
 
     def stop(self):
         # Release Camera
-        self.camera.release()
+        self.camera.Close()
+
+    def read(self):
+        image, width, height = self.camera.CaptureRGBA(zeroCopy=1)
+        if self.video_output:
+            self.output.Render(image)
+        return image, width, height
 
     def run(self):
         if self.autopilot:
@@ -107,6 +122,16 @@ class CarCamera(Thread):
                                          move=self.car_move,
                                          speed=self.car_speed,
                                          distance=self.distance)
+
+        # allocate the output, with half the size of the input
+        imgOutput = jetson.utils.cudaAllocMapped(width=224,
+                                                 height=224,
+                                                 format=image.format)
+
+        # rescale the image (the dimensions are taken from preprocessor)
+        jetson.utils.cudaResize(image, imgOutput)
+
+        image = jetson.utils.cudaToNumpy(imgOutput).astype(np.uint8)
         cv2.imwrite(
             self.camera_save_files_path + self.created_dir + generate_image_name(self.counter, self.car_move,
                                                                                  self.car_speed),
