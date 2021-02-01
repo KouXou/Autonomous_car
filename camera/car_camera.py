@@ -123,16 +123,9 @@ class CarCamera(Thread):
                                          speed=self.car_speed,
                                          distance=self.distance)
 
-        # allocate the output, with half the size of the input
-        imgOutput = jetson.utils.cudaAllocMapped(width=224,
-                                                 height=224,
-                                                 format=image.format)
-
-        # rescale the image (the dimensions are taken from preprocessor)
-        jetson.utils.cudaResize(image, imgOutput)
-
-        image = jetson.utils.cudaToNumpy(imgOutput).astype(np.uint8)
+        image = jetson.utils.cudaToNumpy(image).astype(np.uint8)
+        name = self.camera_save_files_path + self.created_dir + generate_image_name(self.counter, self.car_move,
+                                                                                    self.car_speed)
+        image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
         cv2.imwrite(
-            self.camera_save_files_path + self.created_dir + generate_image_name(self.counter, self.car_move,
-                                                                                 self.car_speed),
-            image, [int(cv2.IMWRITE_JPEG_QUALITY), const.image_quality])
+            name, image, [int(cv2.IMWRITE_JPEG_QUALITY), const.image_quality])
