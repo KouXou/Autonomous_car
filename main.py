@@ -22,7 +22,7 @@ keyboard_reader = KeyboardReader()
 # Create LED class
 led = SingleLED(GPIO)
 # Create Car class
-car = Car(GPIO, 65)
+car = Car(GPIO, 45)
 # Create Distance sensor class
 distance_sensor = DistanceSensor(GPIO)
 # Create car camera class
@@ -40,7 +40,7 @@ try:
     # Publish init values to relevant topics
     mqtt.publish(car.speed, 'car/speed/value')
     mqtt.publish(car.move, 'car/move')
-
+    mqtt.publish('1', 'car/mode')
     # Start camera parallel thread
     car_camera.start()
 
@@ -102,7 +102,7 @@ try:
         elif ord(key_press) == 3:
             break
         if car_camera is not None:
-            car_camera.pass_csv_param(input_command=0,
+            car_camera.pass_csv_param(input_command=1,
                                       car_move=car.move,
                                       car_speed=car.speed,
                                       distance=distance_sensor.distance)

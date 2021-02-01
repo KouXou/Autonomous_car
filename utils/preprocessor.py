@@ -10,6 +10,8 @@ class ImagePreProcessor:
 
     def preprocessImage(self, image):
         image = PIL.Image.fromarray(image)
+        image = transforms.functional.crop(image, 50, 0, 174, 224)
+
         preprocess = transforms.Compose([
             transforms.Resize(size=(self.width, self.height)),
             # transforms.CenterCrop(224),

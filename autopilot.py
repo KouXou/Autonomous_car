@@ -16,7 +16,7 @@ class_names = ['forward', 'stop', 'forward_left', 'forward_right']
 FILES_PATH = '/home/kostas/Autonomous_car/files/'
 # model_name = 'track5_2_model_rsnet_40ep'
 # model_name = 'track5+6+8_2_model_mirror'
-model_name = 'track9+10+11+stop_2_model_mirror'
+model_name = 'track9+10+11+12+13_3_model_state'
 # track5_1_model_mirror_trt.pt
 # def create_model(device):
 #     print('Start model creation')
@@ -53,7 +53,7 @@ try:
     # loaded_model = load_pretrained_weights(loaded_model)
     loaded_model = load_trt_model()
 
-    preprocessor = ImagePreProcessor(336, 224)
+    preprocessor = ImagePreProcessor(224, 224)
 
     mqtt.start()
     led = SingleLED(GPIO)
@@ -69,17 +69,16 @@ try:
 
     mqtt.publish(car.move, 'car/move')
     mqtt.publish(car.speed, 'car/speed/value')
+    mqtt.publish('Autopilot Mode', 'car/mode')
     while True:
 
-        # img = input.Capture()
-        # output.Render(img)
+        image = car_camera.read()
 
         if mqtt.speed_value is not None:
             car.set_speed(mqtt.speed_value)
 
         if mqtt.autopilot_status == 'ON':
             led.turnOn(const.blue_LED_pin)
-            image = car_camera.camera.read()
             res = loaded_model(preprocessor.preprocessImage(image).to(device=device).half())
             _, index = torch.max(res, 1)
 
