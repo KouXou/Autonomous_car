@@ -34,7 +34,7 @@ try:
     mqtt.start()
     led.onStartCarLEDs()
     car_camera.start()
-    mqtt.publish('Create Stop images Mode', 'car/mode')
+    mqtt.publish(const.record_stop_dataset_mode, 'car/mode')
     while True:
         key_pressed = keyboard_reader.readKey()
 

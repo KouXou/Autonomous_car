@@ -35,3 +35,8 @@ track_name = 'track5'
 green_LED_pin = 6
 red_LED_pin = 4
 blue_LED_pin = 9
+
+# Mode Constants
+record_dataset_mode = 1
+record_stop_dataset_mode = 2
+autopilot_mode = 3

@@ -48,7 +48,7 @@ try:
 
     mqtt.publish(car.move, 'car/move')
     mqtt.publish(car.speed, 'car/speed/value')
-    mqtt.publish('Autopilot Mode', 'car/mode')
+    mqtt.publish(const.autopilot_mode, 'car/mode')
     while True:
 
         image, width, height = car_camera.read()

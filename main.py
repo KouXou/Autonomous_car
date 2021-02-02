@@ -40,7 +40,7 @@ try:
     # Publish init values to relevant topics
     mqtt.publish(car.speed, 'car/speed/value')
     mqtt.publish(car.move, 'car/move')
-    mqtt.publish('1', 'car/mode')
+    mqtt.publish(const.record_dataset_mode, 'car/mode')
     # Start camera parallel thread
     car_camera.start()
 
