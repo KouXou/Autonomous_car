@@ -26,14 +26,11 @@ class Car:
         self.gpio.output(const.forward_left_pin, forward_left)
         self.gpio.output(const.backward_left_pin, backward_left)
         self.gpio.output(const.forward_right_pin, forward_right)
-        # print(self.direction)
-        # print(self.turn)
 
     def set_speed(self, speed):
         self.speed = speed
         self.pw1.ChangeDutyCycle(self.speed)
         self.pw2.ChangeDutyCycle(self.speed)
-        # print(self.speed)
 
     def set_speed_left(self, speed_left=20):
         self.pw2.ChangeDutyCycle(speed_left)
@@ -62,6 +59,18 @@ class Car:
     def stop(self):
         self.go(False, False, False, False, const.STOP, 'stop')
 
+    def increase_speed(self):
+        """Increase speed by 2"""
+        if self.speed < 99:
+            self.speed = self.speed + 2
+        return self.speed
+
+    def decrease_speed(self):
+        """Decrease speed by 2"""
+        if self.speed > 1:
+            self.speed = self.speed - 2
+        return self.speed
+
     def low_speed(self):
         self.set_speed(50)
 
@@ -70,3 +79,6 @@ class Car:
 
     def high_speed(self):
         self.set_speed(100)
+
+    def zero_speed(self):
+        self.set_speed(0)

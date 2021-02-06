@@ -6,6 +6,8 @@ import pandas as pd
 import jetson.utils
 import sys
 import numpy as np
+import PIL.Image
+import torchvision.transforms as transforms
 
 
 def generate_image_name(counter, car_move, car_speed):
@@ -30,7 +32,7 @@ class CarCamera(Thread):
         self.video_output = video_output
         self.counter = 0
         self.font = jetson.utils.cudaFont()
-        self.camera = jetson.utils.gstCamera(1280, 720)
+        self.camera = jetson.utils.videoSource("csi://0")
         self.output = jetson.utils.videoOutput("rtp://192.168.1.101:1234", argv=sys.argv)
 
         Thread.__init__(self)
@@ -41,7 +43,7 @@ class CarCamera(Thread):
         self.df = carData.create_df()
 
         while True:
-            image, width, height = self.camera.CaptureRGBA(zeroCopy=1)
+            image = self.camera.Capture()
             # self.font.OverlayText(image, width, height, "YOLO", 10, 10, self.font.White,
             #                  self.font.Gray40)
             if self.video_output:
@@ -73,7 +75,7 @@ class CarCamera(Thread):
 
         while True:
             # read the camera image
-            image = self.camera.CaptureRGBA(zeroCopy=1)
+            image = self.camera.Capture()
             if self.take_photo:
                 self.save_photo(image=image, carData=carData)
                 self.take_photo = False
@@ -96,10 +98,10 @@ class CarCamera(Thread):
         self.camera.Close()
 
     def read(self):
-        image, width, height = self.camera.CaptureRGBA(zeroCopy=1)
+        image = self.camera.Capture()
         if self.video_output:
             self.output.Render(image)
-        return image, width, height
+        return image
 
     def run(self):
         if self.autopilot:
@@ -122,10 +124,15 @@ class CarCamera(Thread):
                                          move=self.car_move,
                                          speed=self.car_speed,
                                          distance=self.distance)
-
-        image = jetson.utils.cudaToNumpy(image).astype(np.uint8)
+        # generate image name
         name = self.camera_save_files_path + self.created_dir + generate_image_name(self.counter, self.car_move,
                                                                                     self.car_speed)
-        image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
-        cv2.imwrite(
-            name, image, [int(cv2.IMWRITE_JPEG_QUALITY), const.image_quality])
+        # convert CudaImage to np array
+        image = jetson.utils.cudaToNumpy(image).astype(np.uint8)
+        # read PIL image from array
+        image = PIL.Image.fromarray(image)
+        # resize image
+        image = transforms.functional.resize(image, [224, 224])
+        # save image
+        image.save(name)
+

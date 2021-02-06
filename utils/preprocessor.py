@@ -11,18 +11,11 @@ class ImagePreProcessor:
         self.width = width
 
     def preprocessImage(self, image):
-        # allocate the output, with half the size of the input
-        imgOutput = jetson.utils.cudaAllocMapped(width=self.width,
-                                                 height=self.height,
-                                                 format=image.format)
-
-        # rescale the image (the dimensions are taken from preprocessor)
-        jetson.utils.cudaResize(image, imgOutput)
-
-        # convert to numpy Array (RGBA)
-        array = jetson.utils.cudaToNumpy(imgOutput).astype(numpy.uint8)
-        # Get only 3 channels RGB
-        image = PIL.Image.fromarray(array[:, :, :3])
+        # convert CudaImage to numpy Array (RGBA)
+        image = jetson.utils.cudaToNumpy(image).astype(numpy.uint8)
+        # read image and resize
+        image = PIL.Image.fromarray(image)
+        image = transforms.functional.resize(image, [self.width, self.height])
 
         # crop top 50px from image
         image = transforms.functional.crop(image, 50, 0, 174, 224)
