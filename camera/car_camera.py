@@ -1,4 +1,3 @@
-import cv2
 import utils.constants as const
 from threading import Thread
 from data.car_data import CarData, CsvFile
@@ -32,7 +31,7 @@ class CarCamera(Thread):
         self.video_output = video_output
         self.counter = 0
         self.font = jetson.utils.cudaFont()
-        self.camera = jetson.utils.videoSource("csi://0")
+        self.camera = jetson.utils.videoSource("csi://0", ['--input-width=640', '--input-height=320'])
         self.output = jetson.utils.videoOutput("rtp://192.168.1.101:1234", argv=sys.argv)
 
         Thread.__init__(self)
@@ -97,11 +96,21 @@ class CarCamera(Thread):
         # Release Camera
         self.camera.Close()
 
-    def read(self):
+    def read(self, showMoves=False, move=None, output_percent=None):
         image = self.camera.Capture()
+        if showMoves:
+            self.font.OverlayText(image, 50, 20, move + ' ' + "{:.2f}%".format(output_percent), 10, 10, self.font.White,
+                                  self.font.Gray40)
         if self.video_output:
             self.output.Render(image)
         return image
+
+    def video_out(self, image, showMoves=False, move=None, output_percent=None):
+        if showMoves:
+            self.font.OverlayText(image, 50, 20, move + ' ' + "{:.2f}%".format(output_percent), 10, 10, self.font.White,
+                                  self.font.Gray40)
+        if self.video_output:
+            self.output.Render(image)
 
     def run(self):
         if self.autopilot:
@@ -135,4 +144,3 @@ class CarCamera(Thread):
         image = transforms.functional.resize(image, [224, 224])
         # save image
         image.save(name)
-

@@ -18,9 +18,15 @@ FILES_PATH = '/home/kostas/Autonomous_car/files/'
 # model_name = 'track5_2_model_rsnet_40ep'
 # model_name = 'track5+6+8_2_model_mirror'
 # model_name = 'track9+10+11+12+13_3_model_state'
-model_name = 'track14_1_model_state'
+model_name = 'track14+15+16+17_1_model_state'
 net_name = 'ssd-mobilenet-v2'
-
+net_params = [
+    '--model=/home/kostas/jetson-inference/python/training/detection/ssd/models/sign/ssd-mobilenet.onnx',
+    '--labels=/home/kostas/jetson-inference/python/training/detection/ssd/models/sign/labels.txt',
+    '--input-blob=input_0',
+    '--output-cvg=scores',
+    '--output-bbox=boxes'
+]
 
 def load_trt_model():
     print('Start loading TRT model')
@@ -38,14 +44,14 @@ print(f"Training on device {device}.")
 car_camera = None
 try:
     loaded_model = load_trt_model()
-    net = jetson.inference.detectNet(net_name, sys.argv, 0.5)
+    net = jetson.inference.detectNet(net_name, net_params, 0.5)
     preprocessor = ImagePreProcessor(224, 224)
 
     mqtt.start()
     led = SingleLED(GPIO)
     led.onStartCarLEDs()
 
-    car = Car(GPIO, speed=40)
+    car = Car(GPIO, speed=42)
 
     car_camera = CarCamera(autopilot=True, record_stops=False, video_output=True)
     car_camera.start()
@@ -55,9 +61,10 @@ try:
     mqtt.publish(const.autopilot_mode, 'car/mode')
     counter = 0
     output = 'stop'
+    output_percent = 0
     while True:
 
-        image = car_camera.read()
+        image = car_camera.read(showMoves=True, move=output, output_percent=output_percent)
 
         if mqtt.speed_value is not None:
             car.set_speed(mqtt.speed_value)
@@ -69,35 +76,28 @@ try:
 
             percentage = torch.nn.functional.softmax(res, dim=1)[0] * 100
             output = class_names[index[0]]
+            output_percent = percentage[index[0]].item()
             print(class_names[index[0]], percentage[index[0]].item())
-            # car_camera.output.Render(image)
 
-            # if output != car.move and percentage[index[0]].item() < 95:
-            #     continue
-            if (counter % 5) == 0:
+            if output != car.move and percentage[index[0]].item() < 95:
+                continue
+            # if mqtt.obj_detection_status == 'ON':
+            if mqtt.obj_detection_status == 'ON' and (counter % 3) == 0:
                 # detect objects in the image (with overlay)
                 detections = net.Detect(image, overlay='box,labels,conf')
 
                 for detection in detections:
-                    print(detection)
-                    if detection.ClassID == 3:
-                        # print('YOLOOOOOOOO')
-                        car.zero_speed()
-                        mqtt.publish(0, 'car/speed/value')
-                    else:
-                        car.speed = 40
-                        mqtt.publish(38, 'car/speed/value')
-
-                print(detections)
-                if detections is []:
-                    car.speed = 40
-                    mqtt.publish(38, 'car/speed/value')
-                # update the title bar
-                # car_camera.output.SetStatus("{:s} | Network {:.0f} FPS".format('SSD', net.GetNetworkFPS()))
+                    # print(detection)
+                    if detection.ClassID == 1:
+                        car.set_speed(35)
+                        mqtt.publish(35, 'car/speed/value')
+                        led.turnOff(const.green_LED_pin)
+                    elif detection.ClassID == 2:
+                        car.set_speed(42)
+                        mqtt.publish(42, 'car/speed/value')
+                        led.turnOn(const.green_LED_pin)
 
             counter = counter + 1
-            # print out performance info
-            # net.PrintProfilerTimes()
 
             if output == 'stop':
                 if output != car.move:
@@ -124,6 +124,8 @@ try:
             mqtt.publish('stop', 'car/move')
             car.stop()
             led.turnOff(const.blue_LED_pin)
+
+        # car_camera.video_out(image, showMoves=True, move=output, output_percent=output_percent)
 except KeyboardInterrupt:
     print('turn off')
 

@@ -7,6 +7,7 @@ class MqttCar:
         self.state_field = None
         self.state = '-'
         self.autopilot_status = 'OFF'
+        self.obj_detection_status = 'OFF'
         self.speed_value = 65
         self._establish_mqtt_connection()
 
@@ -17,6 +18,7 @@ class MqttCar:
         print('Connected with result code ' + str(rc))
         # client.subscribe('car/move')
         client.subscribe('autopilot/status')
+        client.subscribe('obj_detection/status')
         client.subscribe('car/speed/value')
 
     def _on_log(self, client, userdata, level, buf):
@@ -30,6 +32,9 @@ class MqttCar:
         elif msg.topic == 'car/speed/value':
             self.speed_value = int(msg.payload.decode('utf-8'))
             print(self.speed_value)
+        elif msg.topic == 'obj_detection/status':
+            self.obj_detection_status = str(msg.payload.decode('utf-8'))
+            print(self.obj_detection_status)
 
     def _establish_mqtt_connection(self):
         print('Trying to connect to MQTT server...')
