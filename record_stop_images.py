@@ -23,7 +23,7 @@ car_camera = CarCamera(autopilot=False, record_stops=True)
 # Create distance sensor class
 distance_sensor = DistanceSensor(GPIO)
 # Create car class
-car = Car(GPIO, 65)
+car = Car(GPIO, 65, move='stop')
 # Create LED class
 led = SingleLED(GPIO)
 

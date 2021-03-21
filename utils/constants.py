@@ -47,7 +47,7 @@ car_speed_topic = 'car/speed/value'
 car_mode_topic = 'car/mode'
 distance_topic = 'distance/value'
 autopilot_topic = 'autopilot/status'
-obj_detection_topic = 'obj_detection/status'
 
 # Classification model constants
-output_classes = ['forward', 'stop', 'forward_left', 'forward_right']
+output_classes = ['forward', 'stop', 'forward_left', 'forward_right',
+                  'speed_limit', 'speed_limit_end']
