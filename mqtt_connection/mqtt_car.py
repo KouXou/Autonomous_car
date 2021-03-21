@@ -16,23 +16,22 @@ class MqttCar:
 
     def _on_connect(self, client, userdata, flags, rc):
         print('Connected with result code ' + str(rc))
-        # client.subscribe('car/move')
-        client.subscribe('autopilot/status')
-        client.subscribe('obj_detection/status')
-        client.subscribe('car/speed/value')
+        client.subscribe(const.autopilot_topic)
+        client.subscribe(const.obj_detection_topic)
+        client.subscribe(const.car_speed_topic)
 
     def _on_log(self, client, userdata, level, buf):
         print('log: ', buf)
 
     def _on_message(self, client, userdata, msg):
         # print(msg.topic + ' ' + str(msg.payload))
-        if msg.topic == 'autopilot/status':
+        if msg.topic == const.autopilot_topic:
             self.autopilot_status = str(msg.payload.decode('utf-8'))
             print(self.autopilot_status)
-        elif msg.topic == 'car/speed/value':
+        elif msg.topic == const.car_speed_topic:
             self.speed_value = int(msg.payload.decode('utf-8'))
             print(self.speed_value)
-        elif msg.topic == 'obj_detection/status':
+        elif msg.topic == const.obj_detection_topic:
             self.obj_detection_status = str(msg.payload.decode('utf-8'))
             print(self.obj_detection_status)
 

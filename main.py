@@ -31,7 +31,6 @@ car_camera = CarCamera(autopilot=False, record_stops=False, video_output=True)
 # Set initial values
 created_dir = ''
 start_rec = ''
-input_command = 0
 try:
     # Start mqtt
     mqtt.start()
@@ -39,9 +38,9 @@ try:
     led.onStartCarLEDs()
 
     # Publish init values to relevant topics
-    mqtt.publish(car.speed, 'car/speed/value')
-    mqtt.publish(car.move, 'car/move')
-    mqtt.publish(const.record_dataset_mode, 'car/mode')
+    mqtt.publish(car.speed, const.car_speed_topic)
+    mqtt.publish(car.move, const.car_move_topic)
+    mqtt.publish(const.record_dataset_mode, const.car_mode_topic)
     # Start camera parallel thread
     car_camera.start()
 
@@ -51,51 +50,42 @@ try:
 
         if key_press == 0:
             car.forward()
-            mqtt.publish(car.move, 'car/move')
+            mqtt.publish(car.move, const.car_move_topic)
         elif key_press == 1:
             car.backward()
-            mqtt.publish(car.move, 'car/move')
+            mqtt.publish(car.move, const.car_move_topic)
         elif key_press == 2:
             if car.direction == const.FWD:
                 car.forwardRight()
-                mqtt.publish(car.move, 'car/move')
+                mqtt.publish(car.move, const.car_move_topic)
             elif car.direction == const.BWD:
                 car.backwardRight()
-                mqtt.publish(car.move, 'car/move')
+                mqtt.publish(car.move, const.car_move_topic)
         elif key_press == 3:
             if car.direction == const.FWD:
                 car.forwardLeft()
-                mqtt.publish(car.move, 'car/move')
+                mqtt.publish(car.move, const.car_move_topic)
             elif car.direction == const.BWD:
                 car.backwardLeft()
-                mqtt.publish(car.move, 'car/move')
+                mqtt.publish(car.move, const.car_move_topic)
         elif key_press == ' ':
             car.stop()
-            mqtt.publish(car.move, 'car/move')
+            mqtt.publish(car.move, const.car_move_topic)
         elif key_press == '+':
             speed = car.increase_speed()
-            mqtt.publish(speed, 'car/speed/value')
+            mqtt.publish(speed, const.car_speed_topic)
         elif key_press == '-':
             speed = car.decrease_speed()
-            mqtt.publish(speed, 'car/speed/value')
+            mqtt.publish(speed, const.car_speed_topic)
         elif key_press == 'l':
             car.low_speed()
-            mqtt.publish(car.speed, 'car/speed/value')
+            mqtt.publish(car.speed, const.car_speed_topic)
         elif key_press == 'm':
             car.medium_speed()
-            mqtt.publish(car.speed, 'car/speed/value')
+            mqtt.publish(car.speed, const.car_speed_topic)
         elif key_press == 'h':
             car.high_speed()
-            mqtt.publish(car.speed, 'car/speed/value')
-        elif key_press == '1':
-            input_command = 1
-            mqtt.publish(input_command, 'car/input/value')
-        elif key_press == '2':
-            input_command = 2
-            mqtt.publish(input_command, 'car/input/value')
-        elif key_press == '0':
-            input_command = 0
-            mqtt.publish(input_command, 'car/input/value')
+            mqtt.publish(car.speed, const.car_speed_topic)
         elif key_press == 'o':
             created_dir, start_rec = dir_manager.create_directory()
             car_camera.start_recording(created_dir=created_dir, start_rec=start_rec)
@@ -115,8 +105,7 @@ try:
         elif ord(key_press) == 3:
             break
         if car_camera is not None:
-            car_camera.pass_csv_param(input_command=input_command,
-                                      car_move=car.move,
+            car_camera.pass_csv_param(car_move=car.move,
                                       car_speed=car.speed,
                                       distance=distance_sensor.distance)
 except KeyboardInterrupt:

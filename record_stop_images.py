@@ -34,7 +34,7 @@ try:
     mqtt.start()
     led.onStartCarLEDs()
     car_camera.start()
-    mqtt.publish(const.record_stop_dataset_mode, 'car/mode')
+    mqtt.publish(const.record_stop_dataset_mode, const.car_mode_topic)
     while True:
         key_pressed = keyboard_reader.readKey()
 
@@ -52,8 +52,7 @@ try:
         elif ord(key_pressed) == 3:
             break
         if car_camera is not None:
-            car_camera.pass_csv_param(input_command=0,
-                                      car_move=car.move,
+            car_camera.pass_csv_param(car_move=car.move,
                                       car_speed=car.speed,
                                       distance=distance_sensor.distance)
 except KeyboardInterrupt:

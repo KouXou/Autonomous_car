@@ -34,5 +34,5 @@ class DistanceSensor(Thread):
             pulse_len = finish - start
             distance_cm = pulse_len / 0.000058
             self.distance = distance_cm
-            publish.single("distance/value", distance_cm, hostname=const.mqtt_hostname)
+            publish.single(const.distance_topic, distance_cm, hostname=const.mqtt_hostname)
             time.sleep(0.1)

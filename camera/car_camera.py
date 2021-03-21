@@ -19,7 +19,6 @@ class CarCamera(Thread):
         self.camera_save_files_path = const.camera_save_files_path
         self.autopilot = autopilot
         self.record_stops = record_stops
-        self.input_command = ''
         self.car_move = ''
         self.car_speed = ''
         self.created_dir = ''
@@ -122,14 +121,13 @@ class CarCamera(Thread):
             print('Record Video Camera Mode')
             self.setup_camera_recording()
 
-    def pass_csv_param(self, input_command, car_move, car_speed, distance):
-        self.input_command = input_command
+    def pass_csv_param(self, car_move, car_speed, distance):
         self.car_move = car_move
         self.car_speed = car_speed
         self.distance = distance
 
     def save_photo(self, image, carData):
-        self.df = carData.addToDataFrame(self.df, input_command=self.input_command,
+        self.df = carData.addToDataFrame(self.df,
                                          move=self.car_move,
                                          speed=self.car_speed,
                                          distance=self.distance)

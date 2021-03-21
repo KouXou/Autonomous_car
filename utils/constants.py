@@ -22,8 +22,8 @@ echo_pin = 20
 
 # Camera Constants
 camera_flip = 2
-image_width =  224 # 336 #640 # 1280
-image_height =  224 #480 #800
+image_width = 224  # 336 #640 # 1280
+image_height = 224  #480 #800
 camera_fps = 30
 camera_save_files_path = '/home/kostas/Autonomous_car/files/'
 image_quality = 90  # from 0 to 100
@@ -40,3 +40,14 @@ blue_LED_pin = 9
 record_dataset_mode = 1
 record_stop_dataset_mode = 2
 autopilot_mode = 3
+
+# MQTT Topics
+car_move_topic = 'car/move'
+car_speed_topic = 'car/speed/value'
+car_mode_topic = 'car/mode'
+distance_topic = 'distance/value'
+autopilot_topic = 'autopilot/status'
+obj_detection_topic = 'obj_detection/status'
+
+# Classification model constants
+output_classes = ['forward', 'stop', 'forward_left', 'forward_right']
