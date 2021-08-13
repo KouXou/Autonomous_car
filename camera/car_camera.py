@@ -31,7 +31,7 @@ class CarCamera(Thread):
         self.counter = 0
         self.font = jetson.utils.cudaFont()
         self.camera = jetson.utils.videoSource("csi://0", ['--input-width=640', '--input-height=320'])
-        self.output = jetson.utils.videoOutput("rtp://192.168.1.101:1234", argv=sys.argv)
+        self.output = jetson.utils.videoOutput(const.video_output_url, argv=sys.argv)
 
         Thread.__init__(self)
         self.daemon = True
